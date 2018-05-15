@@ -1,4 +1,4 @@
-package Socket;
+package Sockets;
 
 import java.io.*;
 import java.net.Socket;
@@ -8,17 +8,18 @@ public class Client {
     public static void main(String[] args) {
         try {
             Scanner consoleInput = new Scanner(System.in);
-            String currentInput = "192.168.164.9";
-            String cesarOffset = "-1";
+            String currentInput;
+            String cesarOffset;
             System.out.println("Enter the host IP: ");
-            String host = "192.168.164.9"; //consoleInput.nextLine();
+            String host = consoleInput.nextLine();
             System.out.println("Enter the port: ");
-            int port = 12345; //consoleInput.nextInt();
+            int port = consoleInput.nextInt();
             Socket sock = new Socket(host, port);
             System.out.println("Connected to " + host + " at port " + port);
             PrintWriter pw = new PrintWriter(sock.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             System.out.println(br.readLine());
+            consoleInput.nextLine();
             do {
                 System.out.println("Enter the offset of the codification!: ");
                 cesarOffset = consoleInput.nextLine();
@@ -30,7 +31,9 @@ public class Client {
                     System.out.println(br.readLine());
                 }
             } while (!cesarOffset.equals("0"));
-            sock.close();
+            if(br.readLine().equals("OK")){
+                sock.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
