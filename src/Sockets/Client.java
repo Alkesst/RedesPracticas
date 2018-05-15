@@ -28,12 +28,14 @@ public class Client {
                     currentInput = consoleInput.nextLine();
                     pw.print(cesarOffset + "\r\n");
                     pw.println(currentInput);
+                    System.out.println("Esperando respuesta del servidor...");
                     System.out.println(br.readLine());
                 }
             } while (!cesarOffset.equals("0"));
-            if(br.readLine().equals("OK")){
-                sock.close();
-            }
+            pw.println("0");
+            System.out.println("Esperando respuesta del servidor...");
+            System.out.println(br.readLine());
+            sock.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
