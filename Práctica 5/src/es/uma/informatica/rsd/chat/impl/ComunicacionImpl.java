@@ -30,18 +30,33 @@ public class ComunicacionImpl implements Comunicacion {
 
 	@Override
 	public void runReceptor() {
-	}
+        while (true) {
+            byte[] data = new byte[256];
+            DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
+            try {
+                serverSocket.receive(datagramPacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String fullMessage = new String(datagramPacket.getData());
+            String[] messagePacket = fullMessage.split("!");
+            InetSocketAddress address = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
+            String nickName = messagePacket[1];
+            String message = fullMessage.substring(nickName.length()+2);
+
+            controller.mostrarMensaje(address, nickName, message);
+
+        }
+    }
 
 	@Override
 	public void envia(InetSocketAddress sa, String mensaje) {
 	    String formattedMessage = "!" + this.alias + "!" + mensaje;
 	    byte[] bytesToSend = formattedMessage.getBytes();
-        DatagramPacket messageToSend = new DatagramPacket(bytesToSend, bytesToSend.length);
-        PuertoAlias pa = new PuertoAlias();
-        pa.alias = this.alias;
-        pa.puerto = sa.getPort();
-        crearSocket(pa);
+        DatagramPacket messageToSend = new DatagramPacket(bytesToSend, bytesToSend.length, sa.getAddress(), sa.getPort());
         try {
+            System.out.println(formattedMessage);
+            System.out.println(messageToSend);
             this.serverSocket.send(messageToSend);
         } catch (IOException e) {
             e.printStackTrace();
