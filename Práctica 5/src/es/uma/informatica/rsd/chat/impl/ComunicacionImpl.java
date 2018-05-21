@@ -18,8 +18,6 @@ public class ComunicacionImpl implements Comunicacion {
         try {
             this.socket = new MulticastSocket(pa.puerto);
             this.alias = pa.alias;
-        } catch (SocketException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,9 +40,14 @@ public class ComunicacionImpl implements Comunicacion {
             }
             String fullMessage = new String(datagramPacket.getData());
             String[] messagePacket = fullMessage.split("!");
-            InetSocketAddress address = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
+            InetSocketAddress address = null;
+            if(datagramPacket.getAddress().isMulticastAddress()){
+                address = new InetSocketAddress(messagePacket[0], datagramPacket.getPort());
+            }else {
+                address = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
+            }
             String nickName = messagePacket[1];
-            String message = fullMessage.substring(nickName.length()+2);
+            String message = fullMessage.substring(nickName.length() + 2);
 
             controller.mostrarMensaje(address, nickName, message);
 
@@ -54,7 +57,7 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void envia(InetSocketAddress sa, String mensaje) {
         String formattedMessage;
-        if (sa.isUnresolved()) { // TODO encontrar una manera de saber que es IP multicast!!!
+        if (sa.getAddress().isMulticastAddress()) { // TODO encontrar una manera de saber que es IP amulticast!!!
             formattedMessage = sa.getHostName() + "!" + this.alias + "!" + mensaje;
         } else {
             formattedMessage = "!" + this.alias + "!" + mensaje;
@@ -62,8 +65,6 @@ public class ComunicacionImpl implements Comunicacion {
 	    byte[] bytesToSend = formattedMessage.getBytes();
         DatagramPacket messageToSend = new DatagramPacket(bytesToSend, bytesToSend.length, sa.getAddress(), sa.getPort());
         try {
-            System.out.println(formattedMessage);
-            System.out.println(messageToSend);
             this.socket.send(messageToSend);
         } catch (IOException e) {
             e.printStackTrace();
