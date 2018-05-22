@@ -1,9 +1,8 @@
 package es.uma.informatica.rsd.chat.impl;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.nio.charset.Charset;
-import java.util.Scanner;
 
 import es.uma.informatica.rsd.chat.ifaces.Comunicacion;
 import es.uma.informatica.rsd.chat.ifaces.Controlador;
@@ -31,62 +30,32 @@ public class ComunicacionImpl implements Comunicacion {
         this.controller = c;
 	}
 
-    @Override
-    public void runReceptor() {
-        //es ejecución continua
-        while(true) {
-            //creación del datagrama
-            byte[] buf = new byte[2048];
-            DatagramPacket rec = new DatagramPacket(buf, 2048);
-
-            System.out.println("Preparado para recibir");
-
+	@Override
+	public void runReceptor() {
+        InetSocketAddress address;
+        byte[] data;
+        while (true) {
             try {
-                //guarda el datagrama
-                s.receive(rec);
-
-                System.out.println("Recibido");
-
-                //creación de scanner y decodificación del datagrama
-                String men = new String(buf, Charset.forName("UTF-8"));
-                Scanner sc = new Scanner (men);
-                sc.useDelimiter("!");
-
-                System.out.println("Recibido: " + men);
-
-                //preparación del vector donde guardamos los datos
-                String[] partes = new String [3];
-
-                if(!men.startsWith("!") && sc.hasNext()) {
-                    partes[0] = sc.next();
+                data = new byte[256];
+                DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
+                try {
+                    socket.receive(datagramPacket);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
-                //descomposición del mensaje
-                for(int i=1; i<=2 && sc.hasNext(); i++) {
-                    partes[i] = sc.next();
-                }
-
-                //creamos el socket del remitente
-                InetSocketAddress remitente = new InetSocketAddress(InetAddress.getByName(partes[0]),rec.getPort());
-
-                //si es unicast
-                if (men.startsWith("!")){
-                    //mostramos la información del datagrama
-                    controller.mostrarMensaje(rec.getSocketAddress(), partes[1], partes[2]);
+                String fullMessage = new String(datagramPacket.getData(), "UTF-8");
+                String[] messagePacket = fullMessage.split("!");
+                if (fullMessage.charAt(0) != '!') {
+                    //  multicast
+                    address = new InetSocketAddress(messagePacket[0], datagramPacket.getPort());
                 } else {
-                    //es multicast
-                    if(partes[1].equals(alias)){
-                        //si es un mensaje propio no hacemos nada
-                    }else{
-                        //corregimos el remitentec
-                        controller.mostrarMensaje(remitente, partes[1], partes[2]);
-                    }
+                    // not multicast
+                    address = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
                 }
-
-                //cerramos scanner
-                sc.close();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
+                String nickName = messagePacket[1];
+                String message = fullMessage.substring(nickName.length() + 2);
+                controller.mostrarMensaje(address, nickName, message);
+            } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }
@@ -94,7 +63,6 @@ public class ComunicacionImpl implements Comunicacion {
 
 	@Override
 	public void envia(InetSocketAddress sa, String mensaje) {
-	    // runs
         String formattedMessage;
         if (sa.getAddress().isMulticastAddress()) { // TODO encontrar una manera de saber que es IP amulticast!!!
             formattedMessage = sa.getHostName() + "!" + this.alias + "!" + mensaje;
