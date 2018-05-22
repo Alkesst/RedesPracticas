@@ -2,6 +2,8 @@ package es.uma.informatica.rsd.chat.impl;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.Charset;
+import java.util.Scanner;
 
 import es.uma.informatica.rsd.chat.ifaces.Comunicacion;
 import es.uma.informatica.rsd.chat.ifaces.Controlador;
@@ -16,7 +18,7 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void crearSocket(PuertoAlias pa) {
         try {
-            this.socket = new MulticastSocket(pa.puerto);
+            this.socket = new MulticastSocket(new InetSocketAddress("192.168.230.12", pa.puerto));
             this.alias = pa.alias;
         } catch (IOException e) {
             e.printStackTrace();
@@ -28,34 +30,70 @@ public class ComunicacionImpl implements Comunicacion {
         this.controller = c;
 	}
 
-	@Override
-	public void runReceptor() {
-        while (true) {
-            byte[] data = new byte[256];
-            DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
+    @Override
+    public void runReceptor() {
+        //es ejecución continua
+        while(true) {
+            //creación del datagrama
+            byte[] buf = new byte[2048];
+            DatagramPacket rec = new DatagramPacket(buf, 2048);
+
+            System.out.println("Preparado para recibir");
+
             try {
-                socket.receive(datagramPacket);
+                //guarda el datagrama
+                s.receive(rec);
+
+                System.out.println("Recibido");
+
+                //creación de scanner y decodificación del datagrama
+                String men = new String(buf, Charset.forName("UTF-8"));
+                Scanner sc = new Scanner (men);
+                sc.useDelimiter("!");
+
+                System.out.println("Recibido: " + men);
+
+                //preparación del vector donde guardamos los datos
+                String[] partes = new String [3];
+
+                if(!men.startsWith("!") && sc.hasNext()) {
+                    partes[0] = sc.next();
+                }
+
+                //descomposición del mensaje
+                for(int i=1; i<=2 && sc.hasNext(); i++) {
+                    partes[i] = sc.next();
+                }
+
+                //creamos el socket del remitente
+                InetSocketAddress remitente = new InetSocketAddress(InetAddress.getByName(partes[0]),rec.getPort());
+
+                //si es unicast
+                if (men.startsWith("!")){
+                    //mostramos la información del datagrama
+                    controller.mostrarMensaje(rec.getSocketAddress(), partes[1], partes[2]);
+                } else {
+                    //es multicast
+                    if(partes[1].equals(alias)){
+                        //si es un mensaje propio no hacemos nada
+                    }else{
+                        //corregimos el remitentec
+                        controller.mostrarMensaje(remitente, partes[1], partes[2]);
+                    }
+                }
+
+                //cerramos scanner
+                sc.close();
             } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-            String fullMessage = new String(datagramPacket.getData());
-            String[] messagePacket = fullMessage.split("!");
-            InetSocketAddress address;
-            if(datagramPacket.getAddress().isMulticastAddress()){
-                address = new InetSocketAddress(messagePacket[0], datagramPacket.getPort());
-            }else {
-                address = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
-            }
-            String nickName = messagePacket[1];
-            String message = fullMessage.substring(nickName.length() + 2);
-            if (!nickName.equals(alias)){
-                controller.mostrarMensaje(address, nickName, message);
             }
         }
     }
 
 	@Override
 	public void envia(InetSocketAddress sa, String mensaje) {
+	    // runs
         String formattedMessage;
         if (sa.getAddress().isMulticastAddress()) { // TODO encontrar una manera de saber que es IP amulticast!!!
             formattedMessage = sa.getHostName() + "!" + this.alias + "!" + mensaje;
@@ -74,7 +112,9 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void joinGroup(InetAddress multi) {
         try {
-            this.socket.joinGroup(socket.getLocalSocketAddress(), socket.getNetworkInterface());
+            //this.socket.joinGroup(new InetSocketAddress(multi.getHostName(), this.socket.getPort()), socket.getNetworkInterface());
+            // this.socket.joinGroup(socket.getLocalSocketAddress(), socket.getNetworkInterface());
+            this.socket.joinGroup(new InetSocketAddress(multi.getHostName(), this.socket.getPort()), NetworkInterface.getByName("eth0"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,7 +123,9 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void leaveGroup(InetAddress multi) {
         try {
-            this.socket.leaveGroup(socket.getLocalSocketAddress(), socket.getNetworkInterface());
+            //this.socket.leaveGroup(socket.getLocalSocketAddress(), socket.getNetworkInterface());
+            //socket.joinGroup(multi);
+            this.socket.joinGroup(new InetSocketAddress(multi.getHostName(), this.socket.getPort()), NetworkInterface.getByName("eth0"));
         } catch (IOException e) {
             e.printStackTrace();
         }
