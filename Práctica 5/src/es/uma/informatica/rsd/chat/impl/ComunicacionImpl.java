@@ -11,6 +11,7 @@ import es.uma.informatica.rsd.chat.impl.DialogoPuerto.PuertoAlias;
 
 // Clase a implementar IP Profesor: 192.168.164.9, puerto: 10000. IP MULTICAS: 239.194.17.132
 public class ComunicacionImpl implements Comunicacion {
+    private static final String IP = "192.168.164.32";
     private MulticastSocket socket;
     private String alias;
     private Controlador controller;
@@ -18,7 +19,7 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void crearSocket(PuertoAlias pa) {
         try {
-            this.socket = new MulticastSocket(new InetSocketAddress("192.168.230.12", pa.puerto));
+            this.socket = new MulticastSocket(new InetSocketAddress(IP, pa.puerto));
             this.alias = pa.alias;
         } catch (IOException e) {
             e.printStackTrace();
@@ -112,9 +113,8 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void joinGroup(InetAddress multi) {
         try {
-            //this.socket.joinGroup(new InetSocketAddress(multi.getHostName(), this.socket.getPort()), socket.getNetworkInterface());
-            // this.socket.joinGroup(socket.getLocalSocketAddress(), socket.getNetworkInterface());
-            this.socket.joinGroup(new InetSocketAddress(multi.getHostName(), this.socket.getPort()), NetworkInterface.getByName("eth0"));
+            this.socket.joinGroup(new InetSocketAddress(multi.getHostAddress(), socket.getLocalPort()), NetworkInterface.getByName(IP));
+            //this.socket.joinGroup(multi);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -123,9 +123,7 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void leaveGroup(InetAddress multi) {
         try {
-            //this.socket.leaveGroup(socket.getLocalSocketAddress(), socket.getNetworkInterface());
-            //socket.joinGroup(multi);
-            this.socket.joinGroup(new InetSocketAddress(multi.getHostName(), this.socket.getPort()), NetworkInterface.getByName("eth0"));
+            this.socket.leaveGroup(new InetSocketAddress(multi.getHostAddress(), socket.getLocalPort()), NetworkInterface.getByName(IP));
         } catch (IOException e) {
             e.printStackTrace();
         }
