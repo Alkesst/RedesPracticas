@@ -3,14 +3,19 @@ package es.uma.informatica.rsd.chat.impl;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 import es.uma.informatica.rsd.chat.ifaces.Comunicacion;
 import es.uma.informatica.rsd.chat.ifaces.Controlador;
 import es.uma.informatica.rsd.chat.impl.DialogoPuerto.PuertoAlias;
 
-// Clase a implementar IP Profesor: 192.168.164.9, puerto: 10000. IP MULTICAS: 239.194.17.132
+/*  Class to implement
+ *  Teacher IP:     192.168.164.9
+ *  Port:           10000
+ *  Multicast IP:   239.194.17.132
+ */
 public class ComunicacionImpl implements Comunicacion {
-    private static final String IP = "192.168.164.32";
+    private static final String IP = "192.168.164.32"; /** Change depending on the pc */
     private MulticastSocket socket;
     private String alias;
     private Controlador controller;
@@ -33,30 +38,34 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void runReceptor() {
         InetSocketAddress address;
-        byte[] data;
+        byte[] data= new byte[256];
+        DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
+
         while (true) {
             try {
-                data = new byte[256];
-                DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
-                try {
-                    socket.receive(datagramPacket);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                String fullMessage = new String(datagramPacket.getData(), "UTF-8");
-                String[] messagePacket = fullMessage.split("!");
-                if (fullMessage.charAt(0) != '!') {
-                    //  multicast
-                    address = new InetSocketAddress(messagePacket[0], datagramPacket.getPort());
-                } else {
-                    // not multicast
-                    address = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
-                }
-                String nickName = messagePacket[1];
-                String message = fullMessage.substring(nickName.length() + 2);
-                controller.mostrarMensaje(address, nickName, message);
-            } catch (UnsupportedEncodingException e) {
+                socket.receive(datagramPacket);
+            } catch (IOException e) {
                 e.printStackTrace();
+            }
+            String fullMessage, nickName, message;
+            String[] separatedMessage;
+            InetSocketAddress ip;
+
+            fullMessage = new String(datagramPacket.getData(), StandardCharsets.UTF_8);
+            separatedMessage = fullMessage.split("!");
+            nickName = separatedMessage[1];
+
+            try {
+                if(InetAddress.getByName(separatedMessage[0]).isMulticastAddress()) {
+                    ip = new InetSocketAddress(separatedMessage[0], datagramPacket.getPort());
+                    message = fullMessage.substring(nickName.length() + separatedMessage[0].length() + 2);
+                } else {
+                    ip = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
+                    message = fullMessage.substring((nickName.length()) + 2);
+                }
+                controller.mostrarMensaje(ip, nickName, message);
+            } catch (UnknownHostException e) {
+                System.err.println("Error receiving packet: " + e.getLocalizedMessage());
             }
         }
     }
@@ -64,7 +73,7 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void envia(InetSocketAddress sa, String mensaje) {
         String formattedMessage;
-        if (sa.getAddress().isMulticastAddress()) { // TODO encontrar una manera de saber que es IP amulticast!!!
+        if (sa.getAddress().isMulticastAddress()) {
             formattedMessage = sa.getHostName() + "!" + this.alias + "!" + mensaje;
         } else {
             formattedMessage = "!" + this.alias + "!" + mensaje;
