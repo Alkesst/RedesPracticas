@@ -150,7 +150,7 @@ public class ControladorImpl implements Controlador
 	@Override
 	public void mostrarMensaje(SocketAddress sa, String alias, String mensaje)
 	{
-		InetSocketAddress isa = (InetSocketAddress)sa;
+		InetSocketAddress isa = (InetSocketAddress) sa;
 		String nombre = isa.toString();
 		if (!conversaciones.containsKey(nombre))
 		{

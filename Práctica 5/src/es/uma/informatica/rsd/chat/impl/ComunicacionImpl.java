@@ -40,7 +40,7 @@ public class ComunicacionImpl implements Comunicacion {
             }
             String fullMessage = new String(datagramPacket.getData());
             String[] messagePacket = fullMessage.split("!");
-            InetSocketAddress address = null;
+            InetSocketAddress address;
             if(datagramPacket.getAddress().isMulticastAddress()){
                 address = new InetSocketAddress(messagePacket[0], datagramPacket.getPort());
             }else {
@@ -48,9 +48,9 @@ public class ComunicacionImpl implements Comunicacion {
             }
             String nickName = messagePacket[1];
             String message = fullMessage.substring(nickName.length() + 2);
-
-            controller.mostrarMensaje(address, nickName, message);
-
+            if (!nickName.equals(alias)){
+                controller.mostrarMensaje(address, nickName, message);
+            }
         }
     }
 
