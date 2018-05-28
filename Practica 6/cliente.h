@@ -1,20 +1,20 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <iostream>
-
-struct InfoCliente {
-    int socket;
-};
+#include <memory>
+#include <string>
 
 
 class Cliente {
 private: 
-    struct InfoCliente infoCliente;
-
+    int clientSocket;
+    int port;
+    char* ipAddress;
 public:
-    Cliente(const char* inet);
+    Cliente(const char* inet, const char* port);
     void ConnectToServer(const char* inet);
+    ssize_t SendMessage(std::string message);
+    void ReceiveMessage(std::string message);
 };

@@ -2,7 +2,7 @@
 *.class
 .DS_Store
 out/
-
+.vscode
 .idea/
 *.iml
 
