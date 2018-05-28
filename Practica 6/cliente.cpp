@@ -35,11 +35,10 @@ void Cliente::ConnectToServer(const char* inet) {
 
 ssize_t Cliente::SendMessage(std::string message) {
     message = message.append(ENDLINE);
-    char* c_message;
-    strcpy(c_message, message.c_str());
-    ssize_t sent = write(clientSocket, c_message, message.length());
+    ssize_t sent = write(clientSocket, message.c_str(), message.length());
     if(sent == -1) {
         std::cout << "No se ha enviado bien el mensaje" << std::endl;
+        std::cout << std::strerror(errno) << std::endl;
     }
     return sent;
 }
