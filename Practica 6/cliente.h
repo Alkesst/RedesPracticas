@@ -11,7 +11,7 @@ class Cliente {
 private: 
     int clientSocket;
     int port;
-    char* ipAddress;
+    std::string ipAddress;
 public:
     Cliente(const char* inet, const char* port);
     void ConnectToServer(const char* inet);

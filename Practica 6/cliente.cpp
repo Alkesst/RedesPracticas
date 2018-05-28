@@ -5,7 +5,8 @@
 
 Cliente::Cliente(const char* inet, const char* p) {
     // works
-    strcpy(ipAddress, inet);;
+    std::string temp(inet);
+    ipAddress = temp;
     Cliente::port = atoi(p);
     std::cout << "Creado el objeto cliente... Puerto: " << port << " ipAddress " <<  ipAddress
     << std::endl;
@@ -54,6 +55,9 @@ int main(int argc, const char* argv[]) {
     Cliente *c = new Cliente(argv[1], argv[2]);
     (*c).ConnectToServer(argv[1]);
     ssize_t status = (*c).SendMessage("EHLO EHLO mbpddealejandro.servidor.io");
+    status = (*c).SendMessage("MAIL FROM: developers@go4me.org");
+    status = (*c).SendMessage("RCPT TO: cuandotepasa@si.xD");
+    status = (*c).SendMessage("DATA\nubject: Buenas tardes\nTo: jesuspa98@gmail.com\nHola, qué tal\n.");
     if(status == -1) {
         std::cout << "HA ocurrido un error enviando el mensaje..." << std::endl;
     }
