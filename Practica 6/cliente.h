@@ -1,5 +1,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <iostream>
@@ -12,9 +13,11 @@ private:
     int clientSocket;
     int port;
     std::string ipAddress;
+    std::string hostName;
 public:
     Cliente(const char* inet, const char* port);
     void ConnectToServer(const char* inet);
     ssize_t SendMessage(std::string message);
-    void ReceiveMessage(std::string message);
+    std::string ReceiveMessage();
+    void SendEmail();
 };

@@ -5,11 +5,9 @@
 
 Cliente::Cliente(const char* inet, const char* p) {
     // works
-    std::string temp(inet);
-    ipAddress = temp;
+    ipAddress = inet;
     Cliente::port = atoi(p);
-    std::cout << "Creado el objeto cliente... Puerto: " << port << " ipAddress " <<  ipAddress
-    << std::endl;
+    std::cout << "Creado el objeto cliente..." << std::endl;
 }
 
 
@@ -27,10 +25,27 @@ void Cliente::ConnectToServer(const char* inet) {
             clientSocket = -1;
             std::cout << "No se ha podido conectar con el servidor..." << std::endl;
         } else {
-            std::cout << "Conectado al servidor..." << std::endl;
-            std::cout << inet << " " << server_address.sin_port << std::endl;
+            // struct hostent *a = gethostbyaddr((const void*) &server_address.sin_addr, sizeof(server_address.sin_addr),
+            //  server_address.sin_family);
+            // hostName = a->h_name;
+            
+            std::cout << "Servidor:\t";
+            std::cout << inet << ":" << ntohs(server_address.sin_port) << "\n";
+            std::cout << "Hostname: \t" << hostName << std::endl;
         }
     } 
+}
+
+void Cliente::SendEmail() {
+    std::string from;
+    std::string to;
+    std::string subject; 
+    std::string body;
+    std::cout << "¿Quién va a mandar el correo?\t";
+    std::cin >> from;
+    std::cout << "¿Quién va a recibir el correo?\t";
+    std::cin >> to;
+    std::cout << from << " " << to << std::endl;
 }
 
 ssize_t Cliente::SendMessage(std::string message) {
@@ -53,12 +68,6 @@ int main(int argc, const char* argv[]) {
     }
     Cliente *c = new Cliente(argv[1], argv[2]);
     (*c).ConnectToServer(argv[1]);
-    ssize_t status = (*c).SendMessage("EHLO EHLO mbpddealejandro.servidor.io");
-    status = (*c).SendMessage("MAIL FROM: developers@go4me.org");
-    status = (*c).SendMessage("RCPT TO: cuandotepasa@si.xD");
-    status = (*c).SendMessage("DATA\nubject: Buenas tardes\nTo: jesuspa98@gmail.com\nHola, qué tal\n.");
-    if(status == -1) {
-        std::cout << "HA ocurrido un error enviando el mensaje..." << std::endl;
-    }
+    (*c).SendEmail();
     return 0;
 }
