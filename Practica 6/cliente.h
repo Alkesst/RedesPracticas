@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cerrno>
 #include <stdlib.h>
+#include <vector>
 
 
 class Cliente {
@@ -17,10 +18,14 @@ private:
     int port;
     std::string ipAddress;
     std::string hostName;
+    std::vector<std::string> ParseReceivedMessage(std::string input);
+    bool ShoulIContinue(std::string input);
+    void SendEmail(std::string from, std::string to, std::string subject, std::string body);
+    std::string ReceiveMessage();
+    ssize_t SendMessage(std::string message);
+
 public:
     Cliente(const char* inet, const char* port);
+    void GetInfoToSend();
     void ConnectToServer(const char* inet);
-    ssize_t SendMessage(std::string message);
-    std::string ReceiveMessage();
-    void SendEmail();
 };

@@ -29,7 +29,8 @@ void Cliente::ConnectToServer(const char* inet) {
             //  server_address.sin_family);
             // hostName = a->h_name;
             std::string received = this->ReceiveMessage();
-            // PARSEA ESTA MIERDA ALECS
+            std::vector<std::string> gotThem = this->ParseReceivedMessage(received);
+            //hostName = gotThem[1];
             std::cout << "Servidor:\t";
             std::cout << inet << ":" << ntohs(server_address.sin_port) << "\n";
             std::cout << "Hostname: \t" << hostName << std::endl;
@@ -38,17 +39,47 @@ void Cliente::ConnectToServer(const char* inet) {
     } 
 }
 
-void Cliente::SendEmail() {
+void Cliente::GetInfoToSend() {
     //works
     std::string from;
     std::string to;
     std::string subject; 
-    std::string body;
-    std::cout << "¿Quién va a mandar el correo?\t";
+    std::stringstream body;
+    std::cout << "¿Quién va a mandar el correo? ";
     std::cin >> from;
-    std::cout << "¿Quién va a recibir el correo?\t";
+    std::cout << "¿Quién va a recibir el correo? ";
     std::cin >> to;
     std::cout << from << " " << to << std::endl;
+    std::cout << "Cual va a ser el asunto del correo? ";
+    std::cin >> subject;
+    std::cout << "Escribe el cuerpo del correo a enviar, para terminar, ponga una línea que solo contenga FIN.\n";
+    std::string currentLine;
+    do {
+        getline(std::cin, currentLine);
+        if(currentLine != "FIN") {
+            body << currentLine << ' ' << std::endl;;
+        }
+    } while(currentLine != "FIN");
+    std::cout << body.str() << std::endl;
+    this->SendEmail(from, to, subject, body.str());
+}
+
+void Cliente::SendEmail(std::string from, std::string to, std::string subject, std::string body) {
+    std::stringstream buildUp;
+    buildUp << "EHLO " << hostName;
+    this->SendMessage(buildUp.str());
+    /* 
+        Esto no está bien, hay que parsear el mensaje recibido!!!
+        */
+    buildUp.str("");
+    buildUp << "MAIL FROM: " << from;
+    this->SendMessage(buildUp.str());
+    buildUp.str("");
+    buildUp << "RCPT TO: " << to;
+    this->SendMessage(buildUp.str());
+    buildUp.str("");
+    buildUp << "DATA";
+    this->SendMessage(buildUp.str());
 }
 
 ssize_t Cliente::SendMessage(std::string message) {
@@ -79,6 +110,16 @@ std::string Cliente::ReceiveMessage() {
     return message.str();
 }
 
+std::vector<std::string> Cliente::ParseReceivedMessage(std::string input) {
+    std::vector<std::string> stringsParsed;
+    std::istringstream f(input);
+    std::string eachString;
+    while(getline(f, eachString, ' ')) {
+        stringsParsed.push_back(eachString);
+    }
+    return stringsParsed;
+}
+
 
 int main(int argc, const char* argv[]) {
     // std::shared_ptr<Cliente> c = new Cliente("192.168.164.28");
@@ -89,6 +130,6 @@ int main(int argc, const char* argv[]) {
     }
     Cliente *c = new Cliente(argv[1], argv[2]);
     (*c).ConnectToServer(argv[1]);
-    (*c).SendEmail();
+    (*c).GetInfoToSend();
     return 0;
 }
