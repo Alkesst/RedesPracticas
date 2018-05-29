@@ -28,7 +28,7 @@ void Cliente::ConnectToServer(const char* inet) {
             // struct hostent *a = gethostbyaddr((const void*) &server_address.sin_addr, sizeof(server_address.sin_addr),
             //  server_address.sin_family);
             // hostName = a->h_name;
-            
+
             std::cout << "Servidor:\t";
             std::cout << inet << ":" << ntohs(server_address.sin_port) << "\n";
             std::cout << "Hostname: \t" << hostName << std::endl;
