@@ -73,22 +73,22 @@ void Cliente::SendEmail(const std::string &from, const std::string &to, const st
     received = this->ReceiveMessage();
     std::cout << received << std::endl;
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     received = this->ReceiveMessage();
     std::cout << received << std::endl;
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     received = this->ReceiveMessage();
     std::cout << received << std::endl;
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     received = this->ReceiveMessage();
     std::cout << received << std::endl;
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     buildUp.str("");
     buildUp << "MAIL FROM: " << from;
@@ -96,7 +96,7 @@ void Cliente::SendEmail(const std::string &from, const std::string &to, const st
     received = this->ReceiveMessage();
     std::cout << received << std::endl;
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     buildUp.str("");
     buildUp << "RCPT TO: " << to;
@@ -104,7 +104,7 @@ void Cliente::SendEmail(const std::string &from, const std::string &to, const st
     received = this->ReceiveMessage();
     std::cout << received << std::endl;
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     buildUp.str("");
     buildUp << "DATA";
@@ -115,7 +115,7 @@ void Cliente::SendEmail(const std::string &from, const std::string &to, const st
     this->SendMessage(buildUp.str());
     received = this->ReceiveMessage();
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
-        exit(std::stoi(error));
+        exit(to_int(error.c_str()));
     }
     std::cout << "Message sent successfuly!!" << std::endl;
 }
@@ -176,6 +176,32 @@ bool Cliente::ShoulIContinue(const std::string &input, std::string &causeError) 
     }
     return false;
 }
+
+int Cliente::to_int(char const *s) {
+    if ( s == NULL || *s == '\0' ) {
+        throw std::invalid_argument("null or empty string argument");
+    }
+
+    bool negate = (s[0] == '-');
+    if ( *s == '+' || *s == '-' ) {
+        ++s;
+    }
+
+    if ( *s == '\0') {
+        throw std::invalid_argument("sign character only.");
+    }
+
+    int result = 0;
+    while(*s) {
+        if ( *s >= '0' && *s <= '9' ) {
+            result = result * 10  - (*s - '0');  //assume negative number
+        } else {
+            throw std::invalid_argument("invalid input string");
+        }
+        ++s;
+    }
+    return negate ? result : -result; //-result is positive!
+} 
 
 
 int main(int argc, const char* argv[]) {

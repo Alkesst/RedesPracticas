@@ -24,7 +24,7 @@ private:
     void SendEmail(const std::string &from, const std::string &to, const std::string &subject, const std::string &body);
     std::string ReceiveMessage();
     ssize_t SendMessage(const std::string &message);
-
+    int to_int(char const *s);
 public:
     Cliente(const char* inet, const char* port);
     void GetInfoToSend();
