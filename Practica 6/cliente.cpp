@@ -19,18 +19,20 @@ void Cliente::ConnectToServer(const char* inet) {
         server_address.sin_family = AF_INET;
         inet_aton(inet, &(server_address.sin_addr));
         server_address.sin_port = htons(25);
-        server_address.sin_addr.s_addr = INADDR_ANY;
         if(connect(clientSocket, (struct sockaddr*) &server_address, sizeof(struct sockaddr_in)) == -1) {
             close(clientSocket);
             clientSocket = -1;
             std::cout << "No se ha podido conectar con el servidor..." << std::endl;
+            exit(-1);
         } else {
             // struct hostent *a = gethostbyaddr((const void*) &server_address.sin_addr, sizeof(server_address.sin_addr),
             //  server_address.sin_family);
             // hostName = a->h_name;
             std::string received = this->ReceiveMessage();
             std::vector<std::string> gotThem = this->ParseReceivedMessage(received);
-            hostName = gotThem[1];
+            if(gotThem.size() > 0) {
+                hostName = gotThem[1];
+            }
             std::cout << "Servidor:\t";
             std::cout << inet << ":" << ntohs(server_address.sin_port) << "\n";
             std::cout << "Hostname: \t" << hostName << std::endl;
@@ -49,7 +51,6 @@ void Cliente::GetInfoToSend() {
     std::cin >> from;
     std::cout << "¿Quién va a recibir el correo? ";
     std::cin >> to;
-    std::cout << from << " " << to << std::endl;
     std::cout << "Cual va a ser el asunto del correo? ";
     std::cin >> subject;
     std::cout << "Escribe el cuerpo del correo a enviar, para terminar, ponga una línea que solo contenga FIN.\n";
@@ -63,65 +64,71 @@ void Cliente::GetInfoToSend() {
     this->SendEmail(from, to, subject, body.str());
 }
 
-void Cliente::SendEmail(std::string from, std::string to, std::string subject, std::string body) {
+void Cliente::SendEmail(const std::string &from, const std::string &to, const std::string &subject, const std::string &body) {
     std::stringstream buildUp;
     std::string received;
-    char error;
+    std::string error;
     buildUp << "EHLO " << hostName;
     this->SendMessage(buildUp.str());
-    this->ReceiveMessage();
-    this->ReceiveMessage();
-    this->ReceiveMessage();
     received = this->ReceiveMessage();
-    if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
-        buildUp.str("");
-        buildUp << "MAIL FROM: " << from;
-        this->SendMessage(buildUp.str());
-        received = this->ReceiveMessage();
-        if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
-            buildUp.str("");
-            buildUp << "RCPT TO: " << to;
-            this->SendMessage(buildUp.str());
-            received = this->ReceiveMessage();
-            if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
-                buildUp.str("");
-                buildUp << "DATA";
-                this->SendMessage(buildUp.str());
-                received = this->ReceiveMessage();
-                if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
-                    buildUp.str("");
-                    buildUp << "Subject: " << subject << "\nTo: " << to << "\nContent-Type: text/plain;"
-                    << "\nContent-Transfer-Encoding: 8bit\n" << body << ENDLINE << "." << ENDLINE;
-                    received = this->ReceiveMessage();
-                    if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
-                        std::cout << "Success... Email sent!" << std::endl;
-                    } else {
-                        std::cerr << "Error while sending the mail.." << std::endl;
-                    }
-                }
-            } else {
-                if(error == '5') {
-                    std::cerr << "Syntax error in parameters..." << std::endl;
-                }
-            }
-        } else {
-            if(error == '5') {
-                std::cerr << "Syntax error in parameters..." << std::endl;
-            }
-        }
-    } else {
-        std::cerr << "There was a " << error << " error while connecting to the hostname" << std::endl;
+    std::cout << received << std::endl;
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
     }
-    
+    received = this->ReceiveMessage();
+    std::cout << received << std::endl;
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
+    }
+    received = this->ReceiveMessage();
+    std::cout << received << std::endl;
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
+    }
+    received = this->ReceiveMessage();
+    std::cout << received << std::endl;
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
+    }
+    buildUp.str("");
+    buildUp << "MAIL FROM: " << from;
+    this->SendMessage(buildUp.str());
+    received = this->ReceiveMessage();
+    std::cout << received << std::endl;
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
+    }
+    buildUp.str("");
+    buildUp << "RCPT TO: " << to;
+    this->SendMessage(buildUp.str());
+    received = this->ReceiveMessage();
+    std::cout << received << std::endl;
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
+    }
+    buildUp.str("");
+    buildUp << "DATA";
+    this->SendMessage(buildUp.str());
+    buildUp.str("");
+    buildUp << "Subject: " << subject << "\nFrom: " << from << "\nTo: " << to << "\nContent-Type: text/plain;"
+    << "\nContent-Transfer-Encoding: 8bit\n" << body << ENDLINE << ".";
+    this->SendMessage(buildUp.str());
+    received = this->ReceiveMessage();
+    if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
+        exit(std::stoi(error));
+    }
+    std::cout << "Message sent successfuly!!" << std::endl;
 }
 
-ssize_t Cliente::SendMessage(std::string message) {
+ssize_t Cliente::SendMessage(const std::string &message) {
     //works
-    message = message.append(ENDLINE);
-    ssize_t sent = write(clientSocket, message.c_str(), message.length());
+    std::string formattedMessage = message;
+    formattedMessage.append(ENDLINE);
+    ssize_t sent = write(clientSocket, formattedMessage.c_str(), formattedMessage.length());
     if(sent == -1) {
         std::cout << "No se ha enviado bien el mensaje" << std::endl;
         std::cout << std::strerror(errno) << std::endl;
+        exit(-1);
     }
     return sent;
 }
@@ -129,21 +136,25 @@ ssize_t Cliente::SendMessage(std::string message) {
 std::string Cliente::ReceiveMessage() {
     //Recive el mensaje
     std::stringstream message;
-    ssize_t currentStatus;
+    bool finishedMessage = false;
+    ssize_t currentStatus = 10;
     char currentChar, lastRead;
-    while(currentStatus != -1 && currentStatus != 0 && lastRead != '\r' && currentChar != '\n') {
+    while((currentStatus != -1 && currentStatus != 0) && !finishedMessage) {
         currentStatus = read(clientSocket, &currentChar, sizeof(currentChar));
-        if(lastRead != '\r' && currentChar != '\n') {
+        if(lastRead != '\r' || currentChar != '\n') {
             if(currentChar != '\r') {
                 message << currentChar;
             }
+        } else {
+            finishedMessage = true;
         }
         lastRead = currentChar;
     }
-    return message.str();
+    std::string copia = message.str();
+    return copia;
 }
 
-std::vector<std::string> Cliente::ParseReceivedMessage(std::string input) {
+std::vector<std::string> Cliente::ParseReceivedMessage(const std::string &input) {
     std::vector<std::string> stringsParsed;
     std::istringstream f(input);
     std::string eachString;
@@ -153,8 +164,9 @@ std::vector<std::string> Cliente::ParseReceivedMessage(std::string input) {
     return stringsParsed;
 }
 
-bool Cliente::ShoulIContinue(std::string input, char &causeError) {
-    char firstLiteral = firstLiteral;
+bool Cliente::ShoulIContinue(const std::string &input, std::string &causeError) {
+    // works
+    char firstLiteral = input[0];
     if(firstLiteral == '1' || firstLiteral == '2' || firstLiteral == '3') {
         return true;
     } else if(firstLiteral == '4') {
