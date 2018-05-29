@@ -28,15 +28,18 @@ void Cliente::ConnectToServer(const char* inet) {
             // struct hostent *a = gethostbyaddr((const void*) &server_address.sin_addr, sizeof(server_address.sin_addr),
             //  server_address.sin_family);
             // hostName = a->h_name;
-            
+            std::string received = this->ReceiveMessage();
+            // PARSEA ESTA MIERDA ALECS
             std::cout << "Servidor:\t";
             std::cout << inet << ":" << ntohs(server_address.sin_port) << "\n";
             std::cout << "Hostname: \t" << hostName << std::endl;
+            std::cout << received << std::endl;
         }
     } 
 }
 
 void Cliente::SendEmail() {
+    //works
     std::string from;
     std::string to;
     std::string subject; 
@@ -49,6 +52,7 @@ void Cliente::SendEmail() {
 }
 
 ssize_t Cliente::SendMessage(std::string message) {
+    //works
     message = message.append(ENDLINE);
     ssize_t sent = write(clientSocket, message.c_str(), message.length());
     if(sent == -1) {
@@ -56,6 +60,23 @@ ssize_t Cliente::SendMessage(std::string message) {
         std::cout << std::strerror(errno) << std::endl;
     }
     return sent;
+}
+
+std::string Cliente::ReceiveMessage() {
+    //Recive el mensaje
+    std::stringstream message;
+    ssize_t currentStatus;
+    char currentChar, lastRead;
+    while(currentStatus != -1 && currentStatus != 0 && lastRead != '\r' && currentChar != '\n') {
+        currentStatus = read(clientSocket, &currentChar, sizeof(currentChar));
+        if(lastRead != '\r' && currentChar != '\n') {
+            if(currentChar != '\r') {
+                message << currentChar;
+            }
+        }
+        lastRead = currentChar;
+    }
+    return message.str();
 }
 
 

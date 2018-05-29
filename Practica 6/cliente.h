@@ -5,7 +5,10 @@
 #include <unistd.h>
 #include <iostream>
 #include <memory>
-#include <string>
+#include <cstring>
+#include <sstream>
+#include <cerrno>
+#include <stdlib.h>
 
 
 class Cliente {
