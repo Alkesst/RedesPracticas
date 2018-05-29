@@ -30,7 +30,7 @@ void Cliente::ConnectToServer(const char* inet) {
             // hostName = a->h_name;
             std::string received = this->ReceiveMessage();
             std::vector<std::string> gotThem = this->ParseReceivedMessage(received);
-            //hostName = gotThem[1];
+            hostName = gotThem[1];
             std::cout << "Servidor:\t";
             std::cout << inet << ":" << ntohs(server_address.sin_port) << "\n";
             std::cout << "Hostname: \t" << hostName << std::endl;
@@ -60,26 +60,59 @@ void Cliente::GetInfoToSend() {
             body << currentLine << ' ' << std::endl;;
         }
     } while(currentLine != "FIN");
-    std::cout << body.str() << std::endl;
     this->SendEmail(from, to, subject, body.str());
 }
 
 void Cliente::SendEmail(std::string from, std::string to, std::string subject, std::string body) {
     std::stringstream buildUp;
+    std::string received;
+    char error;
     buildUp << "EHLO " << hostName;
     this->SendMessage(buildUp.str());
-    /* 
-        Esto no está bien, hay que parsear el mensaje recibido!!!
-        */
-    buildUp.str("");
-    buildUp << "MAIL FROM: " << from;
-    this->SendMessage(buildUp.str());
-    buildUp.str("");
-    buildUp << "RCPT TO: " << to;
-    this->SendMessage(buildUp.str());
-    buildUp.str("");
-    buildUp << "DATA";
-    this->SendMessage(buildUp.str());
+    this->ReceiveMessage();
+    this->ReceiveMessage();
+    this->ReceiveMessage();
+    received = this->ReceiveMessage();
+    if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
+        buildUp.str("");
+        buildUp << "MAIL FROM: " << from;
+        this->SendMessage(buildUp.str());
+        received = this->ReceiveMessage();
+        if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
+            buildUp.str("");
+            buildUp << "RCPT TO: " << to;
+            this->SendMessage(buildUp.str());
+            received = this->ReceiveMessage();
+            if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
+                buildUp.str("");
+                buildUp << "DATA";
+                this->SendMessage(buildUp.str());
+                received = this->ReceiveMessage();
+                if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
+                    buildUp.str("");
+                    buildUp << "Subject: " << subject << "\nTo: " << to << "\nContent-Type: text/plain;"
+                    << "\nContent-Transfer-Encoding: 8bit\n" << body << ENDLINE << "." << ENDLINE;
+                    received = this->ReceiveMessage();
+                    if(ShoulIContinue(ParseReceivedMessage(received)[0], error)) {
+                        std::cout << "Success... Email sent!" << std::endl;
+                    } else {
+                        std::cerr << "Error while sending the mail.." << std::endl;
+                    }
+                }
+            } else {
+                if(error == '5') {
+                    std::cerr << "Syntax error in parameters..." << std::endl;
+                }
+            }
+        } else {
+            if(error == '5') {
+                std::cerr << "Syntax error in parameters..." << std::endl;
+            }
+        }
+    } else {
+        std::cerr << "There was a " << error << " error while connecting to the hostname" << std::endl;
+    }
+    
 }
 
 ssize_t Cliente::SendMessage(std::string message) {
@@ -118,6 +151,18 @@ std::vector<std::string> Cliente::ParseReceivedMessage(std::string input) {
         stringsParsed.push_back(eachString);
     }
     return stringsParsed;
+}
+
+bool Cliente::ShoulIContinue(std::string input, char &causeError) {
+    char firstLiteral = firstLiteral;
+    if(firstLiteral == '1' || firstLiteral == '2' || firstLiteral == '3') {
+        return true;
+    } else if(firstLiteral == '4') {
+        causeError = '4';
+    } else if(firstLiteral == '5') {
+        causeError = '5';
+    }
+    return false;
 }
 
 
