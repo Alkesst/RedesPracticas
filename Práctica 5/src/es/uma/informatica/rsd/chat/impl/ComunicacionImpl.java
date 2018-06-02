@@ -22,8 +22,8 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void crearSocket(PuertoAlias pa) {
         try {
-            this.socket = new MulticastSocket(new InetSocketAddress(IP, pa.puerto));
-            this.alias = pa.alias;
+            this.socket = new MulticastSocket(new InetSocketAddress(IP, pa.puerto));                                    // Creamos del Socket
+            this.alias = pa.alias;                                                                                      // Asignamos del alias
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -31,17 +31,17 @@ public class ComunicacionImpl implements Comunicacion {
 
 	@Override
 	public void setControlador(Controlador c) {
-        this.controller = c;
+        this.controller = c;                                                                                            // Asignamos el controlador
 	}
 
     @Override
     public void runReceptor() {
         while(true) {
             byte[] data = new byte[256];
-            DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
+            DatagramPacket datagramPacket = new DatagramPacket(data, data.length);                                      // Creamos el datagrama
 
             try {
-                socket.receive(datagramPacket);
+                socket.receive(datagramPacket);                                                                         // Guardamos en un datagrama el mensaje recibido
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -49,20 +49,20 @@ public class ComunicacionImpl implements Comunicacion {
             String[] separatedMessage;
             InetSocketAddress ip;
 
-            fullMessage = new String(datagramPacket.getData(), StandardCharsets.UTF_8);
-            separatedMessage = fullMessage.split("!");
-            nickName = separatedMessage[1];
+            fullMessage = new String(datagramPacket.getData(), StandardCharsets.UTF_8);                                 // Pasamos el mensaje a String
+            separatedMessage = fullMessage.split("!");                                                           // Lo separamos en un array de Strings
+            nickName = separatedMessage[1];                                                                             // Cogemos el nickname
 
             try {
-                if(InetAddress.getByName(separatedMessage[0]).isMulticastAddress()) {
-                    ip = new InetSocketAddress(separatedMessage[0], datagramPacket.getPort());
-                    message = fullMessage.substring(nickName.length() + separatedMessage[0].length() + 2);
-                } else {
-                    ip = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());
-                    message = fullMessage.substring(nickName.length() + 2);
+                if(InetAddress.getByName(separatedMessage[0]).isMulticastAddress()) {                                   // Si es multicas:
+                    ip = new InetSocketAddress(separatedMessage[0], datagramPacket.getPort());                          // Asignamos la IP a la que nos ha llegado desde el mensaje (1er elemento)
+                    message = fullMessage.substring(nickName.length() + separatedMessage[0].length() + 2);              // Asignamos el mensaje calculando los desplazamientos
+                } else {                                                                                                // Si no es multicast:
+                    ip = new InetSocketAddress(datagramPacket.getAddress(), datagramPacket.getPort());                  // Asignamos la IP como la IP del equipo del que viene el datagrama
+                    message = fullMessage.substring(nickName.length() + 2);                                             // Asignamos el mensaje calculando los desplazamientos
                 }
-                if (!nickName.equals(alias)) {
-                    controller.mostrarMensaje(ip, nickName, message);
+                if (!nickName.equals(alias)) {                                                                          // Si el nickname es distinto del alias, es decir, es si no mismo el que lo manda
+                    controller.mostrarMensaje(ip, nickName, message);                                                   // Mostramos el mensaje
                 }
             } catch (UnknownHostException e) {
                 System.err.println("Error receiving packet: " + e.getLocalizedMessage());
@@ -73,15 +73,15 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void envia(InetSocketAddress sa, String mensaje) {
         String formattedMessage;
-        if (sa.getAddress().isMulticastAddress()) {
-            formattedMessage = sa.getHostName() + "!" + this.alias + "!" + mensaje;
-        } else {
-            formattedMessage = "!" + this.alias + "!" + mensaje;
+        if (sa.getAddress().isMulticastAddress()) {                                                                     // Si estamos en multicast:
+            formattedMessage = sa.getHostName() + "!" + this.alias + "!" + mensaje;                                     // Formateamos el mensaje con el HostName
+        } else {                                                                                                        // Si no estamos en multicast:
+            formattedMessage = "!" + this.alias + "!" + mensaje;                                                        // Formateamos el mensaje sin IP al principio
         }
-        byte[] bytesToSend = formattedMessage.getBytes();
-        DatagramPacket messageToSend = new DatagramPacket(bytesToSend, bytesToSend.length, sa.getAddress(), sa.getPort());
+        byte[] bytesToSend = formattedMessage.getBytes();                                                               // Guardamos el mensaje en un array de Bytes
+        DatagramPacket messageToSend = new DatagramPacket(bytesToSend, bytesToSend.length, sa.getAddress(), sa.getPort());  // Guardamos el array en un Datagrama para poder mandarlo
         try {
-            this.socket.send(messageToSend);
+            this.socket.send(messageToSend);                                                                            // Enviamos el mensaje
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,8 +90,8 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void joinGroup(InetAddress multi) {
         try {
-            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(IP));
-            socket.joinGroup(new InetSocketAddress(multi, socket.getLocalPort()), networkInterface);
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(IP));           // Creamos la interfaz de red
+            socket.joinGroup(new InetSocketAddress(multi, socket.getLocalPort()), networkInterface);                    // Nos unimos al grupo con dicha interfaz
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,8 +100,8 @@ public class ComunicacionImpl implements Comunicacion {
 	@Override
 	public void leaveGroup(InetAddress multi) {
         try {
-            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(IP));
-            socket.leaveGroup(new InetSocketAddress(multi, socket.getLocalPort()), networkInterface);
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getByName(IP));           // Creamos la interfaz de red
+            socket.leaveGroup(new InetSocketAddress(multi, socket.getLocalPort()), networkInterface);                   // Dejamos el grupo con dicha interfaz
         } catch (IOException e) {
             e.printStackTrace();
         }
