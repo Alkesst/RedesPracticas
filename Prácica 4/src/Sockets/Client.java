@@ -37,7 +37,8 @@ public class Client {
             System.out.println(br.readLine());                                                                          // Recibir respuesta para cerrar la conexion (OK)
             sock.close();                                                                                               // Conexion cerrada
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Server has closed.");                                                                   // Si el servidor se ha cerrado por timeout u otros motivos, el cliente
+            System.exit(-1);                                                                                     // se cerrará tras intentar enviar algún mensaje.
         }
     }
 }
