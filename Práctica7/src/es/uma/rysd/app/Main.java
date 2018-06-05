@@ -1,12 +1,19 @@
 package es.uma.rysd.app;
 
+
+import java.util.List;
 import java.util.Scanner;
 
 import es.uma.rysd.entities.Tweet;
 
 public class Main {	
 	private final static String proxy = "proxy.lcc.uma.es";
-	private final static String proxy_port = "3128"; 
+	private final static String proxy_port = "3128";
+
+	private static String imprimirTwitaso(Tweet tweetaso){
+        return tweetaso.text + "\n\tBy: @" + tweetaso.user.screen_name + ". RT: " + tweetaso.retweet_count
+                + " FAV: " + tweetaso.favorite_count + ". Created at: " + tweetaso.created_at;
+    }
 
 
     public static void main(String[] args) {
@@ -27,11 +34,11 @@ public class Main {
         do {
         	System.out.println("Termino a buscar: ");        	
         	String text = sc.nextLine();
-        	Tweet[] ts = t.search(text);
+        	Tweet[] ts = t.search(text, true);
         	Integer i = 0;
         	for(Tweet t1 : ts){
         		i++;
-        		System.out.println(i.toString()+" : "+t1);
+        		System.out.println(i.toString()+" : "+ imprimirTwitaso(t1));
         	}
 
         	String [] lista = new String[3];
@@ -39,12 +46,15 @@ public class Main {
         		System.out.println("Usuario "+i+" a buscar: ");
         		lista[i-1] = sc.nextLine();
         	}
-        	ts = t.getTweetsUser(lista);
+        	List<Tweet[]> listOfTweets;
+        	listOfTweets = t.getTweetsUser(lista);
         	i = 0;
-        	for(Tweet t1 : ts){
-        		i++;
-        		System.out.println(i.toString()+" : "+t1);
-        	}
+			for(Tweet[] ahidentro : listOfTweets) {
+				for(Tweet canelo : ahidentro) {
+					i++;
+					System.out.println(i.toString()+" : "+imprimirTwitaso(canelo));
+				}
+			}
         	System.out.println("\nDesea repetir el proceso (s/n)?");
         	repetir = sc.nextLine();
         }while(repetir.equals("s"));
