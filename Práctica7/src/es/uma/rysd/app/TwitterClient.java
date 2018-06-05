@@ -133,4 +133,10 @@ public class TwitterClient {
         }
         return listaDeTweets;
     }
+
+    public static void main(String[] args) {
+        TwitterClient tc = new TwitterClient();
+        Tweet[] tw = tc.search("Pedro Sánchez", true);
+        System.out.println(tw[0].user.location);
+    }
 }

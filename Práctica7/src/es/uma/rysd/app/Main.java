@@ -12,7 +12,8 @@ public class Main {
 
 	private static String imprimirTwitaso(Tweet tweetaso){
         return tweetaso.text + "\n\tBy: @" + tweetaso.user.screen_name + ". RT: " + tweetaso.retweet_count
-                + " FAV: " + tweetaso.favorite_count + ". Created at: " + tweetaso.created_at;
+                + " FAV: " + tweetaso.favorite_count + ". Created at: " + tweetaso.created_at + " " +
+                tweetaso.user.location;
     }
 
 
