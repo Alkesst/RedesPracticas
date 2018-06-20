@@ -3,14 +3,23 @@
 
 #define ENDLINE "\r\n"
 
+/*
+ * Crea un objeto cliente asignándole una direccion ip
+ * y un puerto p, el cual hay que pasar de char a int con la funcion atoi
+ */
 Cliente::Cliente(const char* inet, const char* p) {
-    // works
     ipAddress = inet;
     Cliente::port = atoi(p);
     std::cout << "Creado el objeto cliente..." << std::endl;
 }
 
-
+/*
+ * crea un socket para conectarse a la dirección inet.
+ * si no es capaz de conectarse al socket, cierra el programa.
+ * en otro caso, recive el mensaje de bienvenida del servidor,
+ * lo parsea, lo guarda en una variable del cliente y muestra por
+ * consola a qué hostname te has conectado y al puerto.
+ */
 void Cliente::ConnectToServer(const char* inet) {
     // works
     clientSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -117,7 +126,10 @@ void Cliente::SendEmail(const std::string &from, const std::string &to, const st
     if(!ShoulIContinue(this->ParseReceivedMessage(received)[0], error)) {
         exit(to_int(error.c_str()));
     }
-    std::cout << "Message sent successfuly!!" << std::endl;
+    this->SendMessage("QUIT");
+    received = this->ReceiveMessage();
+    std::cout << "Message sent successfuly!!\nDisconnected from server... Status: " << received << std::endl;
+    std::cout << "Exiting..." << std::endl;
 }
 
 ssize_t Cliente::SendMessage(const std::string &message) {
