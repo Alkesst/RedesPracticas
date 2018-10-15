@@ -15,16 +15,16 @@ public class Server{
             ServerSocket serverSocket = new ServerSocket(12345);                                                  // Creamos el Servior con el puerto 12345
             System.out.println("Port opened");
             for(;;){//Bucle infinito
-                    Socket clientSocket = serverSocket.accept();                                                        // Aceptar la conexion
-                    PrintWriter pw = new PrintWriter(clientSocket.getOutputStream(), true);                   // Creamos el PrintWriter para poder enviar
-                    BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));       // Creamos el BufferedReader para leer (recibir)
-                    pw.println("Binvenido al servicio de cifrado");                                                     // Enviamos al cliente el mensaje de bienvenida
-                    String inetClientAddress = clientSocket.getInetAddress().toString();                                // Guardamos la IP del equipo que se ha conectado
-                    System.out.println("Client " + inetClientAddress + " connected...");                                // Imprimimos la IP del cliente conectado
-                    int cesarOffset;
-                    String receivedMessage = "";
-                    String messageToSend = "";
-                    try {
+                Socket clientSocket = serverSocket.accept();                                                        // Aceptar la conexion
+                PrintWriter pw = new PrintWriter(clientSocket.getOutputStream(), true);                   // Creamos el PrintWriter para poder enviar
+                BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));       // Creamos el BufferedReader para leer (recibir)
+                pw.println("Binvenido al servicio de cifrado");                                                     // Enviamos al cliente el mensaje de bienvenida
+                String inetClientAddress = clientSocket.getInetAddress().toString();                                // Guardamos la IP del equipo que se ha conectado
+                System.out.println("Client " + inetClientAddress + " connected...");                                // Imprimimos la IP del cliente conectado
+                int cesarOffset;
+                String receivedMessage = "";
+                String messageToSend = "";
+                try {
                     clientSocket.setSoTimeout(40000);                                                                   // En caso de que no enviar nada, cerrar la conexion con el Timeout
                     do {
                         cesarOffset = Integer.parseInt(br.readLine());                                                  // Obtenemos la cantidad para hacer el offset
